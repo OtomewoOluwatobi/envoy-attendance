@@ -98,6 +98,19 @@ namespace envoy_attendance.Controllers
                 });
             }
 
+            // If password verification succeeded but the format is old (direct comparison was used),
+            // update the password to the new secure format
+            try
+            {
+                Convert.FromBase64String(admin.Password);
+            }
+            catch (FormatException)
+            {
+                // Update to new password format
+                admin.Password = passwordService.HashPassword(loginDto.Password);
+                dbcontext.SaveChanges();
+            }
+
             // Generate JWT token
             var token = jwtService.GenerateToken(admin);
 

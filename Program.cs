@@ -38,6 +38,7 @@ builder.Services.AddAuthentication(options =>
 
 // Register the JWT service
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<IPasswordService, PasswordService>();
 
 var app = builder.Build();
 
