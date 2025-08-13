@@ -1,0 +1,6 @@
+@envoy_attendance_HostAddress = http://localhost:5173
+
+GET {{envoy_attendance_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
