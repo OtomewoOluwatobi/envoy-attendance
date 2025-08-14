@@ -10,6 +10,8 @@ namespace envoy_attendance.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Consumes("application/json")] // Explicitly state that this controller consumes JSON
+    [Produces("application/json")] // Explicitly state that this controller produces JSON
     public class AdminController : ControllerBase
     {
         private readonly ApplicationDbContext dbcontext;
@@ -25,8 +27,18 @@ namespace envoy_attendance.Controllers
 
         [HttpPost("register")]
         [Authorize] // Require authentication
-        public IActionResult CreateAdmin(AddAdminDto addAdminDto)
+        public IActionResult CreateAdmin([FromBody] AddAdminDto addAdminDto)
         {
+            if (addAdminDto == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid admin data",
+                    data = (object?)null
+                });
+            }
+
             // Check if the current user is a SuperAdmin
             var currentUserRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
             
@@ -68,13 +80,29 @@ namespace envoy_attendance.Controllers
             {
                 success = true,
                 message = "Admin created successfully",
-                data = newAdmin
+                data = new
+                {
+                    newAdmin.Id,
+                    newAdmin.Name,
+                    newAdmin.Email,
+                    newAdmin.Role
+                }
             });
         }
 
         [HttpPost("login")]
-        public IActionResult Login(LoginDto loginDto)
+        public IActionResult Login([FromBody] LoginDto loginDto)
         {
+            if (loginDto == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid login data",
+                    data = (object?)null
+                });
+            }
+
             // Find the admin by email
             var admin = dbcontext.Admins.FirstOrDefault(a => a.Email == loginDto.Email);
             if (admin == null)
@@ -215,8 +243,18 @@ namespace envoy_attendance.Controllers
 
         [HttpPut("edit/{id:guid}")]
         [Authorize]
-        public IActionResult UpdateAdmin(Guid id, UpdateAdminDto updateAdminDto)
+        public IActionResult UpdateAdmin(Guid id, [FromBody] UpdateAdminDto updateAdminDto)
         {
+            if (updateAdminDto == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid admin data",
+                    data = (object?)null
+                });
+            }
+
             // Verify the admin exists
             var admin = dbcontext.Admins.Find(id);
             if (admin == null)
@@ -279,8 +317,18 @@ namespace envoy_attendance.Controllers
 
         [HttpPut("profile")]
         [Authorize]
-        public IActionResult UpdateProfile(UpdateAdminDto updateAdminDto)
+        public IActionResult UpdateProfile([FromBody] UpdateAdminDto updateAdminDto)
         {
+            if (updateAdminDto == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid admin data",
+                    data = (object?)null
+                });
+            }
+            
             // Get the current user ID
             var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);
             var admin = dbcontext.Admins.Find(currentUserId);
@@ -328,10 +376,20 @@ namespace envoy_attendance.Controllers
             });
         }
 
-        [HttpPut("change-password")]
+        [HttpPut("update-password")]
         [Authorize]
-        public IActionResult ChangePassword(ChangePasswordDto changePasswordDto)
+        public IActionResult UpdatePassword([FromBody] UpdatePasswordDto updatePasswordDto)
         {
+            if (updatePasswordDto == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid password data",
+                    data = (object?)null
+                });
+            }
+            
             // Get the current user ID
             var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);
             var admin = dbcontext.Admins.Find(currentUserId);
@@ -347,7 +405,7 @@ namespace envoy_attendance.Controllers
             }
 
             // Verify current password
-            if (!passwordService.VerifyPassword(changePasswordDto.CurrentPassword, admin.Password))
+            if (!passwordService.VerifyPassword(updatePasswordDto.CurrentPassword, admin.Password))
             {
                 return BadRequest(new
                 {
@@ -358,7 +416,7 @@ namespace envoy_attendance.Controllers
             }
 
             // Hash and save the new password
-            admin.Password = passwordService.HashPassword(changePasswordDto.NewPassword);
+            admin.Password = passwordService.HashPassword(updatePasswordDto.NewPassword);
             dbcontext.SaveChanges();
 
             return Ok(new
@@ -369,10 +427,20 @@ namespace envoy_attendance.Controllers
             });
         }
 
-        [HttpPut("admin/{id:guid}/change-password")]
+        [HttpPut("{id:guid}/change-password")]
         [Authorize]
         public IActionResult ChangeAdminPassword(Guid id, AdminPasswordChangeDto passwordChangeDto)
         {
+            if (passwordChangeDto == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid password data",
+                    data = (object?)null
+                });
+            }
+            
             // Check if the current user is a SuperAdmin
             var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
             
@@ -410,10 +478,20 @@ namespace envoy_attendance.Controllers
             });
         }
 
-        [HttpPut("admin/{id:guid}/change-role")]
+        [HttpPut("{id:guid}/change-role")]
         [Authorize]
-        public IActionResult ChangeAdminRole(Guid id, ChangeRoleDto changeRoleDto)
+        public IActionResult ChangeAdminRole(Guid id, [FromBody] ChangeRoleDto changeRoleDto)
         {
+            if (changeRoleDto == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid role data",
+                    data = (object?)null
+                });
+            }
+            
             // Check if the current user is a SuperAdmin
             var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
             var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace envoy_attendance.Models.Dtos.Admin
 {
-    public class ChangePasswordDto
+    public class UpdatePasswordDto
     {
         [Required]
         public required string CurrentPassword { get; set; }
